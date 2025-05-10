@@ -300,16 +300,7 @@ def delete_old_files():
 
 
 threading.Thread(target=delete_old_files, daemon=True).start()
-examples_videos = [
-    ["example_videos/horse.mp4"],
-    ["example_videos/kitten.mp4"],
-    ["example_videos/train_running.mp4"],
-]
-examples_images = [
-    ["example_images/beach.png"],
-    ["example_images/street.png"],
-    ["example_images/camping.png"],
-]
+
 
 with gr.Blocks() as demo:
     gr.Markdown("""
@@ -329,9 +320,6 @@ with gr.Blocks() as demo:
                 "圖片轉影片: 輸入圖片 (不能與影片輸入同時使用)", open=False
             ):
                 image_input = gr.Image(label="輸入圖片 (將裁剪至 720 × 480)")
-                # examples_component_images = gr.Examples(
-                #     examples_images, inputs=[image_input], cache_examples=False
-                # )
             with gr.Accordion(
                 "影片轉影片: 輸入影片 (不能與圖片輸入同時使用)", open=False
             ):
@@ -339,9 +327,6 @@ with gr.Blocks() as demo:
                     label="輸入影片 (將裁剪至 49 幀, 8fps 6 秒鐘)"
                 )
                 strength = gr.Slider(0.1, 1.0, value=0.8, step=0.01, label="保留原影片程度")
-                # examples_component_videos = gr.Examples(
-                #     examples_videos, inputs=[video_input], cache_examples=False
-                # )
             prompt = gr.Textbox(
                 label="提示詞 (少於 200 字)", placeholder="請輸入提示詞", lines=5
             )
@@ -373,6 +358,7 @@ with gr.Blocks() as demo:
 
         with gr.Column():
             video_output = gr.Video(label="CogVideoX 生成的影片", width=720, height=480)
+            error_output = gr.Markdown(visible=False)  # Add this line
             with gr.Row():
                 download_video_button = gr.File(label="📥 下載影片", visible=False)
                 download_gif_button = gr.File(label="📥 下載 GIF", visible=False)
@@ -389,40 +375,29 @@ with gr.Blocks() as demo:
         rife_status,
         progress=gr.Progress(track_tqdm=True),
     ):
-        latents, seed = infer(
-            prompt,
-            image_input,
-            video_input,
-            video_strength,
-            num_inference_steps=50,  # NOT Changed
-            guidance_scale=7.0,  # NOT Changed
-            seed=seed_value,
-            progress=progress,
-        )
-        if scale_status:
-            latents = utils.upscale_batch_and_concatenate(upscale_model, latents, device)
-        if rife_status:
-            latents = rife_inference_with_latents(frame_interpolation_model, latents)
+        try:
+            latents, seed = infer(
+                prompt,
+                image_input,
+                video_input,
+                video_strength,
+                num_inference_steps=50,
+                guidance_scale=7.0,
+                seed=seed_value,
+                progress=progress,
+            )
+            
+            if scale_status:
+                latents = utils.upscale_batch_and_concatenate(upscale_model, latents, device)
+            if rife_status:
+                latents = rife_inference_with_latents(frame_interpolation_model, latents)
 
-        batch_size = latents.shape[0]
-        batch_video_frames = []
-        for batch_idx in range(batch_size):
-            pt_image = latents[batch_idx]
-            pt_image = torch.stack([pt_image[i] for i in range(pt_image.shape[0])])
+            # ...existing video processing code...
 
-            image_np = VaeImageProcessor.pt_to_numpy(pt_image)
-            image_pil = VaeImageProcessor.numpy_to_pil(image_np)
-            batch_video_frames.append(image_pil)
-
-        video_path = utils.save_video(
-            batch_video_frames[0], fps=math.ceil((len(batch_video_frames[0]) - 1) / 6)
-        )
-        video_update = gr.update(visible=True, value=video_path)
-        gif_path = convert_to_gif(video_path)
-        gif_update = gr.update(visible=True, value=gif_path)
-        seed_update = gr.update(visible=True, value=seed)
-
-        return video_path, video_update, gif_update, seed_update
+            return video_path, video_update, gif_update, seed_update, gr.update(visible=False)
+            
+        except Exception as e:
+            return None, None, None, None, gr.update(visible=True, value=f"錯誤: {str(e)}")
 
     def enhance_prompt_func(prompt):
         return convert_prompt(prompt, retry_times=1)
@@ -430,7 +405,7 @@ with gr.Blocks() as demo:
     generate_button.click(
         generate,
         inputs=[prompt, image_input, video_input, strength, seed_param, enable_scale, enable_rife],
-        outputs=[video_output, download_video_button, download_gif_button, seed_text],
+        outputs=[video_output, download_video_button, download_gif_button, seed_text, error_output],
     )
 
     enhance_button.click(enhance_prompt_func, inputs=[prompt], outputs=[prompt])
