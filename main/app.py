@@ -314,142 +314,70 @@ examples_images = [
 with gr.Blocks() as demo:
     gr.Markdown("""
            <div style="text-align: center; font-size: 32px; font-weight: bold; margin-bottom: 20px;">
-               CogVideoX-5B Huggingface Space🤗
+               CogVideoX-5B 模型展示空間🤗
            </div>
            <div style="text-align: center;">
-               <a href="https://huggingface.co/THUDM/CogVideoX-5B">🤗 5B(T2V) Model Hub</a> |
-               <a href="https://huggingface.co/THUDM/CogVideoX-5B-I2V">🤗 5B(I2V) Model Hub</a> |
+               <a href="https://huggingface.co/THUDM/CogVideoX-5B">🤗 5B(文字生成影片)模型庫</a> |
+               <a href="https://huggingface.co/THUDM/CogVideoX-5B-I2V">🤗 5B(圖片生成影片)模型庫</a> |
                <a href="https://github.com/THUDM/CogVideo">🌐 Github</a> |
-               <a href="https://arxiv.org/pdf/2408.06072">📜 arxiv </a>
+               <a href="https://arxiv.org/pdf/2408.06072">📜 論文</a>
            </div>
-           <div style="text-align: center;display: flex;justify-content: center;align-items: center;margin-top: 1em;margin-bottom: .5em;">
-              <span>If the Space is too busy, duplicate it to use privately</span>
-              <a href="https://huggingface.co/spaces/THUDM/CogVideoX-5B-Space?duplicate=true"><img src="https://huggingface.co/datasets/huggingface/badges/resolve/main/duplicate-this-space-lg.svg" width="160" style="
-                margin-left: .75em;
-            "></a>
-           </div>
-           <div style="text-align: center; font-size: 15px; font-weight: bold; color: red; margin-bottom: 20px;">
-            ⚠️ This demo is for academic research and experimental use only.
-            </div>
            """)
     with gr.Row():
         with gr.Column():
             with gr.Accordion(
-                "I2V: Image Input (cannot be used simultaneously with video input)", open=False
+                "圖片轉影片: 輸入圖片 (不能與影片輸入同時使用)", open=False
             ):
-                image_input = gr.Image(label="Input Image (will be cropped to 720 * 480)")
+                image_input = gr.Image(label="輸入圖片 (將裁剪至 720 × 480)")
                 examples_component_images = gr.Examples(
                     examples_images, inputs=[image_input], cache_examples=False
                 )
             with gr.Accordion(
-                "V2V: Video Input (cannot be used simultaneously with image input)", open=False
+                "影片轉影片: 輸入影片 (不能與圖片輸入同時使用)", open=False
             ):
                 video_input = gr.Video(
-                    label="Input Video (will be cropped to 49 frames, 6 seconds at 8fps)"
+                    label="輸入影片 (將裁剪至 49 幀, 8fps 6 秒鐘)"
                 )
-                strength = gr.Slider(0.1, 1.0, value=0.8, step=0.01, label="Strength")
+                strength = gr.Slider(0.1, 1.0, value=0.8, step=0.01, label="保留原影片程度")
                 examples_component_videos = gr.Examples(
                     examples_videos, inputs=[video_input], cache_examples=False
                 )
             prompt = gr.Textbox(
-                label="Prompt (Less than 200 Words)", placeholder="Enter your prompt here", lines=5
+                label="提示詞 (少於 200 字)", placeholder="請輸入提示詞", lines=5
             )
 
             with gr.Row():
                 gr.Markdown(
-                    "✨Upon pressing the enhanced prompt button, we will use [GLM-4 Model](https://github.com/THUDM/GLM-4) to polish the prompt and overwrite the original one."
+                    "✨點擊提示詞增強按鈕後，系統將使用 [GLM-4 模型](https://github.com/THUDM/GLM-4) 來優化提示詞並覆蓋原有內容。"
                 )
-                enhance_button = gr.Button("✨ Enhance Prompt(Optional)")
+                enhance_button = gr.Button("✨ 增強提示詞(選用)")
             with gr.Group():
                 with gr.Column():
                     with gr.Row():
                         seed_param = gr.Number(
-                            label="Inference Seed (Enter a positive number, -1 for random)",
+                            label="隨機種子 (輸入正數，-1 為隨機)",
                             value=-1,
                         )
                     with gr.Row():
                         enable_scale = gr.Checkbox(
-                            label="Super-Resolution (720 × 480 -> 2880 × 1920)", value=False
+                            label="超解析度 (720 × 480 -> 2880 × 1920)", value=False
                         )
                         enable_rife = gr.Checkbox(
-                            label="Frame Interpolation (8fps -> 16fps)", value=False
+                            label="影格插值 (8fps -> 16fps)", value=False
                         )
                     gr.Markdown(
-                        "✨In this demo, we use [RIFE](https://github.com/hzwer/ECCV2022-RIFE) for frame interpolation and [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) for upscaling(Super-Resolution).<br>&nbsp;&nbsp;&nbsp;&nbsp;The entire process is based on open-source solutions."
+                        "✨本展示使用 [RIFE](https://github.com/hzwer/ECCV2022-RIFE) 進行影格插值及 [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) 進行超解析度處理。<br>&nbsp;&nbsp;&nbsp;&nbsp;整個處理過程都基於開源解決方案。"
                     )
 
-            generate_button = gr.Button("🎬 Generate Video")
+            generate_button = gr.Button("🎬 生成影片")
 
         with gr.Column():
-            video_output = gr.Video(label="CogVideoX Generate Video", width=720, height=480)
+            video_output = gr.Video(label="CogVideoX 生成的影片", width=720, height=480)
             with gr.Row():
-                download_video_button = gr.File(label="📥 Download Video", visible=False)
-                download_gif_button = gr.File(label="📥 Download GIF", visible=False)
-                seed_text = gr.Number(label="Seed Used for Video Generation", visible=False)
+                download_video_button = gr.File(label="📥 下載影片", visible=False)
+                download_gif_button = gr.File(label="📥 下載 GIF", visible=False)
+                seed_text = gr.Number(label="使用的隨機種子", visible=False)
 
-    gr.Markdown("""
-    <table border="0" style="width: 100%; text-align: left; margin-top: 20px;">
-        <div style="text-align: center; font-size: 32px; font-weight: bold; margin-bottom: 20px;">
-            🎥 Video Gallery(For 5B)
-        </div>
-        <tr>
-            <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
-                <p>A garden comes to life as a kaleidoscope of butterflies flutters amidst the blossoms, their delicate wings casting shadows on the petals below. In the background, a grand fountain cascades water with a gentle splendor, its rhythmic sound providing a soothing backdrop. Beneath the cool shade of a mature tree, a solitary wooden chair invites solitude and reflection, its smooth surface worn by the touch of countless visitors seeking a moment of tranquility in nature's embrace.</p>
-            </td>
-            <td style="width: 25%; vertical-align: top;">
-                <video src="https://github.com/user-attachments/assets/cf5953ea-96d3-48fd-9907-c4708752c714" width="100%" controls autoplay loop></video>
-            </td>
-            <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
-                <p>A small boy, head bowed and determination etched on his face, sprints through the torrential downpour as lightning crackles and thunder rumbles in the distance. The relentless rain pounds the ground, creating a chaotic dance of water droplets that mirror the dramatic sky's anger. In the far background, the silhouette of a cozy home beckons, a faint beacon of safety and warmth amidst the fierce weather. The scene is one of perseverance and the unyielding spirit of a child braving the elements.</p>
-            </td>
-            <td style="width: 25%; vertical-align: top;">
-                <video src="https://github.com/user-attachments/assets/fe0a78e6-b669-4800-8cf0-b5f9b5145b52" width="100%" controls autoplay loop></video>
-            </td>
-        </tr>
-        <tr>
-            <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
-                <p>A suited astronaut, with the red dust of Mars clinging to their boots, reaches out to shake hands with an alien being, their skin a shimmering blue, under the pink-tinged sky of the fourth planet. In the background, a sleek silver rocket, a beacon of human ingenuity, stands tall, its engines powered down, as the two representatives of different worlds exchange a historic greeting amidst the desolate beauty of the Martian landscape.</p>
-            </td>
-            <td style="width: 25%; vertical-align: top;">
-                <video src="https://github.com/user-attachments/assets/c182f606-8f8c-421d-b414-8487070fcfcb" width="100%" controls autoplay loop></video>
-            </td>
-            <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
-                <p>An elderly gentleman, with a serene expression, sits at the water's edge, a steaming cup of tea by his side. He is engrossed in his artwork, brush in hand, as he renders an oil painting on a canvas that's propped up against a small, weathered table. The sea breeze whispers through his silver hair, gently billowing his loose-fitting white shirt, while the salty air adds an intangible element to his masterpiece in progress. The scene is one of tranquility and inspiration, with the artist's canvas capturing the vibrant hues of the setting sun reflecting off the tranquil sea.</p>
-            </td>
-            <td style="width: 25%; vertical-align: top;">
-                <video src="https://github.com/user-attachments/assets/7db2bbce-194d-434d-a605-350254b6c298" width="100%" controls autoplay loop></video>
-            </td>
-        </tr>
-        <tr>
-            <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
-                <p>In a dimly lit bar, purplish light bathes the face of a mature man, his eyes blinking thoughtfully as he ponders in close-up, the background artfully blurred to focus on his introspective expression, the ambiance of the bar a mere suggestion of shadows and soft lighting.</p>
-            </td>
-            <td style="width: 25%; vertical-align: top;">
-                <video src="https://github.com/user-attachments/assets/62b01046-8cab-44cc-bd45-4d965bb615ec" width="100%" controls autoplay loop></video>
-            </td>
-            <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
-                <p>A golden retriever, sporting sleek black sunglasses, with its lengthy fur flowing in the breeze, sprints playfully across a rooftop terrace, recently refreshed by a light rain. The scene unfolds from a distance, the dog's energetic bounds growing larger as it approaches the camera, its tail wagging with unrestrained joy, while droplets of water glisten on the concrete behind it. The overcast sky provides a dramatic backdrop, emphasizing the vibrant golden coat of the canine as it dashes towards the viewer.</p>
-            </td>
-            <td style="width: 25%; vertical-align: top;">
-                <video src="https://github.com/user-attachments/assets/d78e552a-4b3f-4b81-ac3f-3898079554f6" width="100%" controls autoplay loop></video>
-            </td>
-        </tr>
-        <tr>
-            <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
-                <p>On a brilliant sunny day, the lakeshore is lined with an array of willow trees, their slender branches swaying gently in the soft breeze. The tranquil surface of the lake reflects the clear blue sky, while several elegant swans glide gracefully through the still water, leaving behind delicate ripples that disturb the mirror-like quality of the lake. The scene is one of serene beauty, with the willows' greenery providing a picturesque frame for the peaceful avian visitors.</p>
-            </td>
-            <td style="width: 25%; vertical-align: top;">
-                <video src="https://github.com/user-attachments/assets/30894f12-c741-44a2-9e6e-ddcacc231e5b" width="100%" controls autoplay loop></video>
-            </td>
-            <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
-                <p>A Chinese mother, draped in a soft, pastel-colored robe, gently rocks back and forth in a cozy rocking chair positioned in the tranquil setting of a nursery. The dimly lit bedroom is adorned with whimsical mobiles dangling from the ceiling, casting shadows that dance on the walls. Her baby, swaddled in a delicate, patterned blanket, rests against her chest, the child's earlier cries now replaced by contented coos as the mother's soothing voice lulls the little one to sleep. The scent of lavender fills the air, adding to the serene atmosphere, while a warm, orange glow from a nearby nightlight illuminates the scene with a gentle hue, capturing a moment of tender love and comfort.</p>
-            </td>
-            <td style="width: 25%; vertical-align: top;">
-                <video src="https://github.com/user-attachments/assets/926575ca-7150-435b-a0ff-4900a963297b" width="100%" controls autoplay loop></video>
-            </td>
-        </tr>
-    </table>
-        """)
 
     def generate(
         prompt,
