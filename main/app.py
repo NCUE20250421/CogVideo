@@ -329,9 +329,9 @@ with gr.Blocks() as demo:
                 "圖片轉影片: 輸入圖片 (不能與影片輸入同時使用)", open=False
             ):
                 image_input = gr.Image(label="輸入圖片 (將裁剪至 720 × 480)")
-                examples_component_images = gr.Examples(
-                    examples_images, inputs=[image_input], cache_examples=False
-                )
+                # examples_component_images = gr.Examples(
+                #     examples_images, inputs=[image_input], cache_examples=False
+                # )
             with gr.Accordion(
                 "影片轉影片: 輸入影片 (不能與圖片輸入同時使用)", open=False
             ):
@@ -339,9 +339,9 @@ with gr.Blocks() as demo:
                     label="輸入影片 (將裁剪至 49 幀, 8fps 6 秒鐘)"
                 )
                 strength = gr.Slider(0.1, 1.0, value=0.8, step=0.01, label="保留原影片程度")
-                examples_component_videos = gr.Examples(
-                    examples_videos, inputs=[video_input], cache_examples=False
-                )
+                # examples_component_videos = gr.Examples(
+                #     examples_videos, inputs=[video_input], cache_examples=False
+                # )
             prompt = gr.Textbox(
                 label="提示詞 (少於 200 字)", placeholder="請輸入提示詞", lines=5
             )
